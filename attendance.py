@@ -85,7 +85,9 @@ def feed():
     feed_session_attendances()
     print("-SESSION_ATTENDANCES DONE")
 
-def update_session_attendance(student_id, session_id):
+def update_session_attendance(student_number, session_id):
+    student_id = select_from("students", f"student_number={student_number}")
+
     session_attendance = c.execute('''
     SELECT id, presence FROM session_attendances WHERE session_id = (?) AND student_id = (?)
     ''', (session_id, student_id))

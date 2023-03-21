@@ -18,7 +18,7 @@ def main(argv):
         # Run camera scan stuff (must take a session_id)
 
         # test
-        res = attendance.update_session_attendance(2, 222)
+        res = attendance.update_session_attendance(2, 7)
         if res == 1:
             print("you're not enrolled")
         elif res == 2:
