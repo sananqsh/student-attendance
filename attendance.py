@@ -5,115 +5,155 @@ from random import randint, randrange
 conn = sqlite3.connect('attendance.db')
 c = conn.cursor()
 
-TABLES = ["student", "teacher", "lesson", "course", "registration", "session"]
+TABLES = ["students", "teachers", "lessons", "courses", "registrations", "sessions", "session_attendances"]
 COURSES_START = datetime.strptime('1/1/2008 1:30 PM', '%m/%d/%Y %I:%M %p')
 COURSES_END = datetime.strptime('1/1/2009 4:50 AM', '%m/%d/%Y %I:%M %p')
 
 def create_tables():
     c.execute('''
-    CREATE TABLE IF NOT EXISTS student
-    ([id] INTEGER PRIMARY KEY AUTOINCREMENT, [name] TEXT, [number] TEXT)
+    CREATE TABLE IF NOT EXISTS students
+    ([id] INTEGER PRIMARY KEY AUTOINCREMENT, [name] TEXT, [student_number] TEXT)
     ''')
 
     # ex: Calculus I, Chemistry, etc.
     c.execute('''
-    CREATE TABLE IF NOT EXISTS lesson
+    CREATE TABLE IF NOT EXISTS lessons
     ([id] INTEGER PRIMARY KEY AUTOINCREMENT, [name] TEXT)
     ''')
 
 
     c.execute('''
-    CREATE TABLE IF NOT EXISTS teacher
+    CREATE TABLE IF NOT EXISTS teachers
     ([id] INTEGER PRIMARY KEY AUTOINCREMENT, [name] TEXT)
     ''')
 
     c.execute('''
-    CREATE TABLE IF NOT EXISTS course
-    ([id] INTEGER PRIMARY KEY AUTOINCREMENT, lesson_id INTEGER, teacher_id INTEGER, FOREIGN KEY(lesson_id) REFERENCES lessons(id), FOREIGN KEY(teacher_id) REFERENCES teachers(id))
+    CREATE TABLE IF NOT EXISTS courses
+    ([id] INTEGER PRIMARY KEY AUTOINCREMENT, [lesson_id] INTEGER, [teacher_id] INTEGER, FOREIGN KEY(lesson_id) REFERENCES lessons(id), FOREIGN KEY(teacher_id) REFERENCES teachers(id))
     ''')
 
     c.execute('''
-    CREATE TABLE IF NOT EXISTS session
-    ([id] INTEGER PRIMARY KEY AUTOINCREMENT, course_id INTEGER, [session_time] date, FOREIGN KEY(course_id) REFERENCES courses(id))
+    CREATE TABLE IF NOT EXISTS sessions
+    ([id] INTEGER PRIMARY KEY AUTOINCREMENT, [course_id] INTEGER, [session_time] date, FOREIGN KEY(course_id) REFERENCES courses(id))
     ''')
 
     c.execute('''
-    CREATE TABLE IF NOT EXISTS registration
-    ([id] INTEGER PRIMARY KEY AUTOINCREMENT, course_id INTEGER, student_id INTEGER, FOREIGN KEY(course_id) REFERENCES courses(id), FOREIGN KEY(student_id) REFERENCES students(id))
+    CREATE TABLE IF NOT EXISTS registrations
+    ([id] INTEGER PRIMARY KEY AUTOINCREMENT, [course_id] INTEGER, [student_id] INTEGER, FOREIGN KEY(course_id) REFERENCES courses(id), FOREIGN KEY(student_id) REFERENCES students(id))
     ''')
 
-def select_ids_from(table):
-    if table == "student":
-        sqlite_result = c.execute('''SELECT id FROM student''')
-    elif table == "teacher":
-        sqlite_result = c.execute('''SELECT id FROM teacher''')
-    elif table == "lesson":
-        sqlite_result = c.execute('''SELECT id FROM lesson''')
-    elif table == "course":
-        sqlite_result = c.execute('''SELECT id FROM course''')
-    elif table == "registration":
-        sqlite_result = c.execute('''SELECT id FROM registration''')
-    elif table == "session":
-        sqlite_result = c.execute('''SELECT id FROM session''')
+    c.execute('''
+    CREATE TABLE IF NOT EXISTS session_attendances
+    ([id] INTEGER PRIMARY KEY AUTOINCREMENT, [student_id] INTEGER, [session_id] INTEGER, [presence] BOOLEAN DEFAULT 0, FOREIGN KEY(session_id) REFERENCES sessions(id), FOREIGN KEY(student_id) REFERENCES students(id))
+    ''')
+
+
+def select_from(table, where_clause=None, column = "id"):
+    q = "SELECT " + column + " FROM "
+
+    if table in TABLES:
+        q += table
     else:
         print("Not a valid table!")
         return None
 
+    if where_clause:
+        q += " WHERE " + where_clause
+
+    sqlite_result = c.execute(q)
+
     return [row[0] for row in sqlite_result]
+
 
 def feed():
     student_names = ["امید", "رویا", "هوشنگ", "ترانه", "الهام", "ژینا", "نیما", "راهین", "شهاب", "بهنام", "بیژن", "پریا", "پارسا", "هیمن"]
     teacher_names = ["یدالله", "نیلوفر", "مصطفی", "یاسر", "ریحانه", "رضا", "روژین", "شهرزاد", "نگار", "امیرمحمد", "الناز", "اسرا", "صادق جان"]
     lesson_names = ["ریاضی ۱", "ریاضی ۲", "فیزیک ۱", "فیزیک ۲", "شیمی ۱", "معادلات دیفرانسیل", "برنامه نویسی کامپیوتر"]
 
-    # feed_students(student_names)
-    # feed_teachers(teacher_names)
-    # feed_lessons(lesson_names)
-    # feed_courses()
+    feed_students(student_names)
+    feed_teachers(teacher_names)
+    feed_lessons(lesson_names)
+    feed_courses()
     feed_sessions()
+    feed_registrations()
+    feed_session_attendances()
+
 
 def feed_students(names):
     rand_top_idx = len(names) - 1
     for _ in range(10):
         name = names[randint(0, rand_top_idx)]
         student_number = generate_random_student_number()
-        c.execute('''INSERT INTO student (name, number) VALUES (?,?)''', (name, student_number))
+        c.execute('''INSERT INTO students (name, student_number) VALUES (?,?)''', (name, student_number))
         conn.commit()
 
 
 def feed_teachers(names):
     for name in names:
-        c.execute('''INSERT INTO teacher (name) VALUES (?)''', (name,))
+        c.execute('''INSERT INTO teachers (name) VALUES (?)''', (name,))
         conn.commit()
 
 
 def feed_lessons(names):
     for name in names:
-        c.execute('''INSERT INTO lesson (name) VALUES (?)''', (name,))
+        c.execute('''INSERT INTO lessons (name) VALUES (?)''', (name,))
         conn.commit()
 
 
 def feed_courses():
-    teacher_ids = select_ids_from("teacher")
-    lesson_ids = select_ids_from("lesson")
+    teacher_ids = select_from("teachers")
+    lesson_ids = select_from("lessons")
 
     for i in range(5):
-        c.execute('''INSERT INTO course (teacher_id, lesson_id) VALUES (?, ?)''', (teacher_ids[i], lesson_ids[i]))
+        c.execute('''INSERT INTO courses (teacher_id, lesson_id) VALUES (?, ?)''', (teacher_ids[i], lesson_ids[i]))
         conn.commit()
 
 
 def feed_sessions():
-    course_ids = select_ids_from("course")
+    course_ids = select_from("courses")
 
     for course_id in course_ids:
-        for i in range(6):
+        for i in range(5):
             time = random_date(COURSES_START, COURSES_END)
-            c.execute('''INSERT INTO course (teacher_id, lesson_id) VALUES (?, ?)''', (teacher_ids[i], lesson_ids[i]))
+            c.execute('''INSERT INTO sessions (course_id, session_time) VALUES (?, ?)''', (course_ids[i], time))
             conn.commit()
-            # print(time)
+
+
+def feed_registrations():
+    student_ids = select_from("students")
+    course_ids = select_from("courses")
+
+    for i in range(10):
+        c.execute('''INSERT INTO registrations (student_id, course_id) VALUES (?, ?)''', (student_ids[i], course_ids[i % len(course_ids)]))
+        conn.commit()
+
+def feed_session_attendances():
+    course_ids = select_from("courses")
+    student_ids = select_from("students")
+    # session_ids = select_from("sessions")
+
+    # for i in range(10):
+    #     c.execute('''INSERT INTO session_attendances (student_id, session_id) VALUES (?, ?)''', (student_ids[i], session_ids[i % len(session_ids)]))
+    #     conn.commit()
+
+    for course_id in course_ids:
+        # student_ids = c.execute('''SELECT student_id FROM registrations WHERE course_id = (?)''', [course_id])
+        # session_ids = c.execute('''SELECT id FROM sessions WHERE course_id = (?)''', [course_id])
+
+        student_ids = select_from("registrations", f"course_id={course_id}", column="student_id")
+        session_ids = select_from("sessions", f"course_id={course_id}")
+
+        for session_id in session_ids:
+            for student_id in student_ids:
+                c.execute('''INSERT INTO session_attendances (student_id, session_id) VALUES (?, ?)''', (student_id, session_id))
+                conn.commit()
+
 
 
 def generate_random_student_number():
+    """
+    Return a random Fanni student number.
+    """
     fanni_school = "81"
     specialization_school = "{:02d}".format(randint(1, 9))
     enroll_year = str(randint(1394, 1402))[2:4]
@@ -124,8 +164,7 @@ def generate_random_student_number():
 
 def random_date(start, end):
     """
-    This function will return a random datetime between two datetime
-    objects.
+    Return a random datetime between two datetime objects.
     """
     delta = end - start
     int_delta = (delta.days * 24 * 60 * 60) + delta.seconds
