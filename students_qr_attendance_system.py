@@ -1,38 +1,31 @@
 from sys import argv
 import attendance
 
-
-# def update_student_state(id):
-#   student = Student.find(id)
-#
-#   case(student.status):
-#     when(""):
-#
-#     when(""):
-#
-#     when(""):
-#
-#     when(""):
-#
-#     else:
-
-
 def main(argv):
-    for arg in argv:
-        if arg == "--create":
-            attendance.create_tables()
-            print("TABLES CREATED.")
+    if "--create" in argv:
+        attendance.create_tables()
+        print("TABLES CREATED.")
 
-        elif arg == "--feed":
-            attendance.feed()
-            print("DUMMY DATA FED TO DB.")
+    if "--feed" in argv:
+        attendance.feed()
+        print("DUMMY DATA FED TO DB.")
 
-        elif arg == "--file":
-            # Read and insert to DB from next argument
-            pass
+    if "--file" in argv:
+        # Read and insert to DB from next argument
+        pass
 
+    if "--scan" in argv:
+        # Run camera scan stuff (must take a session_id)
 
-    # Run camera scan stuff
+        # test
+        res = attendance.update_session_attendance(2, 222)
+        if res == 1:
+            print("you're not enrolled")
+        elif res == 2:
+            print("you're already in class")
+        else:
+            print("welcome to class!")
+        #
 
 
 if __name__ == "__main__":
