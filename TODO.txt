@@ -1,0 +1,3 @@
+- add jalali datetime (inputs might be jalali and the output should be jalali)
+- read from excel
+- fix issues with cam qr scan
