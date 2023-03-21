@@ -1,3 +1,4 @@
+from sys import argv
 import attendance
 
 
@@ -16,9 +17,23 @@ import attendance
 #     else:
 
 
-def main():
-    attendance.create_tables()
-    attendance.feed()
+def main(argv):
+    for arg in argv:
+        if arg == "--create":
+            attendance.create_tables()
+            print("TABLES CREATED.")
+
+        elif arg == "--feed":
+            attendance.feed()
+            print("DUMMY DATA FED TO DB.")
+
+        elif arg == "--file":
+            # Read and insert to DB from next argument
+            pass
+
+
+    # Run camera scan stuff
+
 
 if __name__ == "__main__":
-    main()
+    main(argv[1:])

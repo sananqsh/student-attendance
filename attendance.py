@@ -6,8 +6,8 @@ conn = sqlite3.connect('attendance.db')
 c = conn.cursor()
 
 TABLES = ["students", "teachers", "lessons", "courses", "registrations", "sessions", "session_attendances"]
-COURSES_START = datetime.strptime('1/1/2008 1:30 PM', '%m/%d/%Y %I:%M %p')
-COURSES_END = datetime.strptime('1/1/2009 4:50 AM', '%m/%d/%Y %I:%M %p')
+COURSES_START = datetime.strptime('1/4/2023 7:30 AM', '%m/%d/%Y %I:%M %p')
+COURSES_END = datetime.strptime('1/6/2023 8:00 PM', '%m/%d/%Y %I:%M %p')
 
 def create_tables():
     c.execute('''
@@ -71,12 +71,19 @@ def feed():
     lesson_names = ["ریاضی ۱", "ریاضی ۲", "فیزیک ۱", "فیزیک ۲", "شیمی ۱", "معادلات دیفرانسیل", "برنامه نویسی کامپیوتر"]
 
     feed_students(student_names)
+    print("-STUDENTS DONE")
     feed_teachers(teacher_names)
+    print("-TEACHERS DONE")
     feed_lessons(lesson_names)
+    print("-LESSONS DONE")
     feed_courses()
+    print("-COURSES DONE")
     feed_sessions()
+    print("-SESSIONS DONE")
     feed_registrations()
+    print("-REGISTRATIONS DONE")
     feed_session_attendances()
+    print("-SESSION_ATTENDANCES DONE")
 
 
 def feed_students(names):
@@ -127,19 +134,11 @@ def feed_registrations():
         c.execute('''INSERT INTO registrations (student_id, course_id) VALUES (?, ?)''', (student_ids[i], course_ids[i % len(course_ids)]))
         conn.commit()
 
+
 def feed_session_attendances():
     course_ids = select_from("courses")
-    student_ids = select_from("students")
-    # session_ids = select_from("sessions")
-
-    # for i in range(10):
-    #     c.execute('''INSERT INTO session_attendances (student_id, session_id) VALUES (?, ?)''', (student_ids[i], session_ids[i % len(session_ids)]))
-    #     conn.commit()
 
     for course_id in course_ids:
-        # student_ids = c.execute('''SELECT student_id FROM registrations WHERE course_id = (?)''', [course_id])
-        # session_ids = c.execute('''SELECT id FROM sessions WHERE course_id = (?)''', [course_id])
-
         student_ids = select_from("registrations", f"course_id={course_id}", column="student_id")
         session_ids = select_from("sessions", f"course_id={course_id}")
 
@@ -149,7 +148,6 @@ def feed_session_attendances():
                 conn.commit()
 
 
-
 def generate_random_student_number():
     """
     Return a random Fanni student number.
@@ -157,9 +155,9 @@ def generate_random_student_number():
     fanni_school = "81"
     specialization_school = "{:02d}".format(randint(1, 9))
     enroll_year = str(randint(1394, 1402))[2:4]
-    last_chunk_id = "{:03d}".format((randint(0, 120)))
+    last_id_chunk = "{:03d}".format((randint(0, 120)))
 
-    return int(fanni_school + specialization_school + enroll_year + last_chunk_id)
+    return int(fanni_school + specialization_school + enroll_year + last_id_chunk)
 
 
 def random_date(start, end):
@@ -171,6 +169,3 @@ def random_date(start, end):
     random_second = randrange(int_delta)
 
     return start + timedelta(seconds=random_second)
-
-
-# jdatetime.datetime.fromgregorian(datetime=datetime.datetime.now()).strftime("%a, %d %b %Y %H:%M:%S")
