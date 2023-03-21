@@ -1,0 +1,4 @@
+jdatetime
+opencv-python
+qrcode
+Pillow
