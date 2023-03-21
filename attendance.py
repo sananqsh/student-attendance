@@ -66,7 +66,7 @@ def select_from(table, where_clause=None, column = "id"):
 
 
 def feed():
-    student_names = ["امید", "رویا", "هوشنگ", "ترانه", "الهام", "ژینا", "نیما", "راهین", "شهاب", "بهنام", "بیژن", "پریا", "پارسا", "هیمن"]
+    student_names = ["امید", "رویا", "هوشنگ", "ترانه", "الهام", "ژینا", "نیما", "متین", "شهاب", "بهنام", "بیژن", "پریا", "پارسا", "هیمن"]
     teacher_names = ["یدالله", "نیلوفر", "مصطفی", "یاسر", "ریحانه", "رضا", "روژین", "شهرزاد", "نگار", "امیرمحمد", "الناز", "اسرا", "صادق جان"]
     lesson_names = ["ریاضی ۱", "ریاضی ۲", "فیزیک ۱", "فیزیک ۲", "شیمی ۱", "معادلات دیفرانسیل", "برنامه نویسی کامپیوتر"]
 
@@ -84,6 +84,31 @@ def feed():
     print("-REGISTRATIONS DONE")
     feed_session_attendances()
     print("-SESSION_ATTENDANCES DONE")
+
+def update_session_attendance(student_id, session_id):
+    session_attendance = c.execute('''
+    SELECT id, presence FROM session_attendances WHERE session_id = (?) AND student_id = (?)
+    ''', (session_id, student_id))
+
+    if session_attendance:
+        r = [row for row in session_attendance]
+
+        id, presence = r[0][0], r[0][1]
+
+        if presence == 0:
+            print("ABSENT")
+            # update in db
+            c.execute('''
+            UPDATE session_attendances SET presence=1 WHERE id = (?)
+            ''', [id])
+
+            conn.commit()
+            return 0
+        else:
+            print("INCLASS")
+            return 2
+    else:
+        return 1
 
 
 def feed_students(names):
