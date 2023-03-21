@@ -1,3 +1,4 @@
 - add jalali datetime (inputs might be jalali and the output should be jalali)
+  - # jdatetime.datetime.fromgregorian(datetime=datetime.datetime.now()).strftime("%a, %d %b %Y %H:%M:%S")
 - read from excel
 - fix issues with cam qr scan
